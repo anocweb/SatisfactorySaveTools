@@ -16,7 +16,7 @@ $save->set_version($saveGameVersion,$packageVersion,$customFormatVersion);
 
 // Read remaining header data
 $save->set_saveGameType($saveReader->get_string());
-$save->set_sessionProperties($saveReader->get_string());
+$save->set_sessionProperties($saveReader->get_UEProperties());
 $save->set_sessionName($saveReader->get_string());
 
 print_r($save);

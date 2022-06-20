@@ -29,8 +29,13 @@ class SatisfactorySave {
     function set_saveGameType(string $string) {
         $this->saveGameType = $string;
     }
-    function set_sessionProperties(string $string) {
-        $props = $this->parse_UEProperties($string);
+    function set_sessionProperties(array $props) {
+        if(!is_array($props)) {
+            throw new Exception("Expected value is not an array");
+        }
+        if (count($props) == 0) {
+            throw new Exception("Expected values, none received in array");
+        }
         $this->sessionProperties = $props;
     }
     function set_sessionName(string $string) {
@@ -53,14 +58,4 @@ class SatisfactorySave {
         return $this->sessionName;
     }
 
-
-
-    private function parse_UEProperties(string $properties) {
-        $regex = '/(?:\?)(?<keys>[\w\s\d]+)(?:\=?)(?<values>[\w\s\d]*)/';
-        preg_match_all($regex, $properties, $matches);
-        if ($matches === false) {
-            return [];
-        }
-        return array_combine($matches['keys'],$matches['values']);
-    }
 }

@@ -68,4 +68,14 @@ class UnrealReader {
         
         return $data;
     }
+
+    function get_UEProperties() {
+        $properties = $this->get_string();
+        $regex = '/(?:\?)(?<keys>[\w\s\d]+)(?:\=?)(?<values>[\w\s\d]*)/';
+        preg_match_all($regex, $properties, $matches);
+        if ($matches === false) {
+            return [];
+        }
+        return array_combine($matches['keys'],$matches['values']);
+    }
 }
