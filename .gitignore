@@ -1,0 +1,4 @@
+.vscode
+php/*.sav
+php/satisfactory_inflated.dat
+php/satisfactory.json

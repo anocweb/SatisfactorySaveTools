@@ -35,5 +35,5 @@ while($status = inflate_get_status($zlib) == 0) {
 }
 
 // Temporarily output to files for testing
-file_put_contents(pathinfo($saveFile)['filename'],$save->get_JSON(true));
+file_put_contents(pathinfo($saveFile)['filename'].".json",$save->get_JSON(true));
 file_put_contents(pathinfo($saveFile)['filename']."_inflated.dat",$inflatedData);
