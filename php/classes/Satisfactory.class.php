@@ -58,4 +58,19 @@ class SatisfactorySave {
         return $this->sessionName;
     }
 
+    function get_JSON($prettyprint) {
+        $arr = Array(
+            "saveGameVersion" => $this->saveGameVersion,
+            "packageVersion" => $this->packageVersion,
+            "customFormatVersion" => $this->customFormatVersion,
+            "saveGameType" => $this->saveGameType,
+            "sessionProperties" => $this->sessionProperties,
+            "sessionName" => $this->sessionName
+        );
+        if ($prettyprint) {
+            return json_encode($arr, JSON_PRETTY_PRINT);
+        } else {
+            return json_encode($arr);
+        }
+    }
 }
