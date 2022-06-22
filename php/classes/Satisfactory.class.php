@@ -8,6 +8,13 @@ class SatisfactorySave {
     private string $saveGameType = "";
     private array $sessionProperties = [];
     private string $sessionName = "";
+    private int $playDurationSeconds = 0;
+    private int $saveDateTime = 0;
+    private bool $sessionVisibility = false; // stored as Byte
+    private int $fEditorObjectVersion = 0; // if saveVersion >= 7
+    private string $modMetaData = ''; // if saveVersion >= 8
+    private bool $isModdedSave = false; // if saveVersion >= 8 / stored as int
+
 
     function set_version(int $saveGameVersion, int $packageVersion, int $customFormatVersion) {
         $this->saveGameVersion = $saveGameVersion;
@@ -41,6 +48,24 @@ class SatisfactorySave {
     function set_sessionName(string $string) {
         $this->sessionName = $string;
     }
+    function set_playDurationSeconds(int $seconds) {
+        $this->playDurationSeconds = $seconds;
+    }
+    function set_saveDateTime(int $timecode) {
+        $this->saveDateTime = $timecode;
+    }
+    function set_sessionVisibility(bool $visibility) {
+        $this->sessionVisibility = $visibility;
+    }
+    function set_fEditorObjectVersion(int $version) {
+        $this->fEditorObjectVersion = $version;
+    }
+    function set_modMetadata(string $object) {
+        $this->modMetaData = $object;
+    }
+    function set_isModdedSave(bool $isModded) {
+        $this->isModdedSave = $isModded;
+    }
 
     function saveGameType() {
         return $this->saveGameType;
@@ -65,8 +90,18 @@ class SatisfactorySave {
             "customFormatVersion" => $this->customFormatVersion,
             "saveGameType" => $this->saveGameType,
             "sessionProperties" => $this->sessionProperties,
-            "sessionName" => $this->sessionName
+            "sessionName" => $this->sessionName,
+            "playDurationSeconds" => $this->playDurationSeconds,
+            "saveDateTime" => $this->saveDateTime,
+            "sessionVisibility" => $this->sessionVisibility,
         );
+        if ($this->saveGameVersion >= 7) {
+            $arr["fEditorObjectVersion"] = $this->fEditorObjectVersion;
+        }
+        if ($this->saveGameVersion >= 8) {
+            $arr["modMetaData"] = $this->modMetaData;
+            $arr["isModdedSave"] = $this->isModdedSave;
+        }
         if ($prettyprint) {
             return json_encode($arr, JSON_PRETTY_PRINT);
         } else {
