@@ -2,7 +2,7 @@
 
 class UnrealReader {
     public $stream;
-    function __construct($filename) {
+    function __construct(string $filename) {
         if (!is_file($filename)) {
             throw new Exception("File does not exist");
         }
@@ -18,25 +18,17 @@ class UnrealReader {
         fclose($this->stream);
     }
 
-    function get_int8() {
-        $data = unpack("c",fread($this->stream,4));
-        
-        return $data[1];
-    }
-    function get_uint8() {
-        $data = unpack("C",fread($this->stream,4));
-        
-        return $data[1];
-    }
-
-    function get_string() {
-        $byteLength = $this->get_uint8();
+    function get_string(string $byteLength) {
+        if ($byteLength == 0) {
+            $data = "";
+        } else {
+        $pos = $this->get_currentPosition();
         $data = fread($this->stream,$byteLength-1);
         $term = bin2hex(fread($this->stream,1));
         if ($term != '00') {
             throw new Exception("Invalid string terminator. expecting \\0 (Str: 00)");
         }
-        
+        }
         return $data;
     }
 
@@ -127,8 +119,13 @@ class UnrealReader {
         return $data;
     }
 
-    function get_UEProperties() {
-        $properties = $this->get_string();
+    function get_currentPosition() {
+        $data = ftell($this->stream);
+        
+        return $data;
+    }
+
+    function get_UEProperties(string $properties) {
         $regex = '/(?:\?)(?<keys>[\w\s\d]+)(?:\=?)(?<values>[\w\s\d]*)/';
         preg_match_all($regex, $properties, $matches);
         if ($matches === false) {
