@@ -14,7 +14,7 @@ class SatisfactorySave {
     private int $fEditorObjectVersion = 0; // if saveVersion >= 7
     private string $modMetaData = ''; // if saveVersion >= 8
     private bool $isModdedSave = false; // if saveVersion >= 8 / stored as int
-
+    private array $objectsTree = [];
 
     function set_version(int $saveGameVersion, int $packageVersion, int $customFormatVersion) {
         $this->saveGameVersion = $saveGameVersion;
@@ -102,10 +102,30 @@ class SatisfactorySave {
             $arr["modMetaData"] = $this->modMetaData;
             $arr["isModdedSave"] = $this->isModdedSave;
         }
+
+        $arr["objectsTree"] = [];
+
+        foreach ($this->objectsTree as $object) {
+            array_push($arr["objectsTree"],(array)$object);
+        }
+        
         if ($prettyprint) {
             return json_encode($arr, JSON_PRETTY_PRINT);
         } else {
             return json_encode($arr);
         }
+    }
+
+    function add_object(SatisfactoryGameObject $object) {
+        array_push($this->objectsTree,$object);
+    }
+    function clear_allObjects() {
+        $this->objectsTree = "";
+    }
+    function get_object(int $i) {
+        return $this->objectsTree[$i];
+    }
+    function get_allObjects() {
+        return $this->objectsTree;
     }
 }
