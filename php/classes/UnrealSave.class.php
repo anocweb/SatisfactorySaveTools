@@ -2,16 +2,26 @@
 
 class UnrealReader {
     public $stream;
-    function __construct(string $filename) {
-        if (!is_file($filename)) {
-            throw new Exception("File does not exist");
+    function __construct(string $filename,$content = '') {
+        if ($filename != "php://temp") {
+            if (!is_file($filename)) {
+                throw new Exception("File does not exist");
+            }
+            if (pathinfo($filename)['extension'] != 'sav') {
+                throw new Exception("Invalid extension type. Must be .sav");
+            }
+            if (!$this->stream = fopen($filename, 'rb')) {
+                throw new Exception("Unable to open specified save file");
+            }
+        } else {
+            if (!$this->stream = fopen($filename, 'rb+')) {
+                throw new Exception("Unable to open specified save file");
+            } else {
+                fwrite($this->stream,$content);
+                rewind($this->stream);
+            }
         }
-        if (pathinfo($filename)['extension'] != 'sav') {
-            throw new Exception("Invalid extension type. Must be .sav");
-        }
-        if (!$this->stream = fopen($filename, 'rb')) {
-            throw new Exception("Unable to open specified save file");
-        }
+        
     }
 
     function __destruct() {
@@ -124,6 +134,10 @@ class UnrealReader {
         
         return $data;
     }
+    function get_totalByteCount() {
+        $data = fstat($this->stream);
+        return $data['size'];
+    }
 
     function get_UEProperties(string $properties) {
         $regex = '/(?:\?)(?<keys>[\w\s\d]+)(?:\=?)(?<values>[\w\s\d]*)/';
@@ -132,5 +146,55 @@ class UnrealReader {
             return [];
         }
         return array_combine($matches['keys'],$matches['values']);
+    }
+
+    function get_object($terminator) {
+        // check that there is enough bytes left to read an object
+        $byteLeft = $this->get_totalByteCount() - $this->get_currentPosition();
+        if ($byteLeft == 73130) {
+            echo "";
+            return null;
+        }
+        echo "";
+        $object = new SatisfactoryGameObject;
+        $object->set_object4bytes(int_helper::uInt32($this->get_chunk(4)));
+        $object->set_object4bytes2(int_helper::uInt32($this->get_chunk(4)));
+
+        $object->set_objectPath($this->get_string(int_helper::uInt32($this->get_chunk(4))));
+        if ($object->get_object4bytes2() != 1) {
+            $object->set_object4bytes3(int_helper::uInt32($this->get_chunk(4)));
+            $object->set_object4bytes4(int_helper::uInt32($this->get_chunk(4)));
+            $object->set_object4bytes5(int_helper::uInt32($this->get_chunk(4)));
+        }  
+        $strLength = int_helper::uInt32($this->get_chunk(4));
+        
+        $object->set_objectScript($this->get_string($strLength));
+        $object->set_objectName($this->get_string(int_helper::uInt32($this->get_chunk(4))));
+        $object->set_objectSettings($this->get_string(int_helper::uInt32($this->get_chunk(4))));
+        $str = '';
+        while (!$this->is_terminator($terminator)) {
+            $str .= $this->get_chunk(4);
+        }
+        $object->object_RemBytes($str);
+        $t = bin2hex($this->get_chunk(12));
+        return $object;
+    }
+
+    private function is_terminator($hexTerminator) {
+        $terminatorFirstByte = substr($hexTerminator,0,8);
+        $remBytes = (strlen($hexTerminator)/2)-4;
+        $byte = $this->get_chunk(4);
+        $byte = bin2hex($byte);
+        if ($byte == $terminatorFirstByte) {
+            $lastbytes = $this->get_chunk($remBytes);
+            $lastbytes = bin2hex($lastbytes);
+            fseek($this->stream, -($remBytes+4), SEEK_CUR);
+            if ($byte.$lastbytes == $hexTerminator) {
+                return true;
+            }
+        } else {
+            fseek($this->stream, -4, SEEK_CUR);
+        }
+        return false;
     }
 }
