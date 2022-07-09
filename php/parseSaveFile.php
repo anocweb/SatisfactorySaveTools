@@ -1,5 +1,6 @@
 <?php
 require_once("classes/Satisfactory.class.php");
+require_once("classes/SatisfactoryObject.class.php");
 require_once("classes/unrealSave.class.php");
 require_once("classes/int_helper.class.php");
 
@@ -35,40 +36,32 @@ if ($saveGameVersion >= 8) {
 // $Read the ZLIB header
 $zlibHeader = $saveReader->get_zlibHeader();
 
-//$data = $saveReader->get_remaining();
 $zlib = inflate_init(ZLIB_ENCODING_RAW);
 $status = inflate_get_status($zlib);
 
+// inflate the rest of the data
 $inflatedData = '';
 while($status = inflate_get_status($zlib) == 0) {
-    $data = $saveReader->get_chunk(256);
+    $data = $saveReader->get_chunk(4096);
     $inflatedData .= inflate_add($zlib,$data);
 }
 
-// Temporarily output to files for testing
-file_put_contents(pathinfo($saveFile)['filename'].".json",$save->get_JSON(true));
+// Store the inflated data in a stream reader
+$inflatedReader = New UnrealReader("php://temp",$inflatedData);
+// Temporarily output to dat files for testing
 file_put_contents(pathinfo($saveFile)['filename']."_inflated.dat",$inflatedData);
 
+unset($saveReader);
+unset($inflatedData);
 
+$object = "";
+while (1) {
+    $object = $inflatedReader->get_object("0000803f0000803f0000803f");
+    if (is_null($object)) {
+        break;
+    }
+    $save->add_object($object);
+}
 
-// Objects in inflated data
-// size type description            : Example from save
-// ---------------------------------------------------------------
-// 8 bytes ??                       :
-// 4 Bytes uint32 string length     : 78
-// *-1 Bytes string                 : Level /Game/FactoryGame/Map/GameLevel01/Tile_X3_Y0.Tile_X3_Y0:PersistentLevel
-// 1 Byte terminator \00            : \00
-// 4 bytes ?? Pos X?                : 57856
-// 4 bytes ?? Pos Y?                : 306
-// 4 bytes ?? Pos Z?                : 1
-// 4 Bytes uint32 string length     : 36
-// *-1 Bytes string                 : /Script/FactoryGame.FGWorldSettings
-// 1 Byte terminator \00            : \00
-// 4 Bytes uint32 string length     : 11
-// *-1 Bytes string                 : Tile_X3_Y0
-// 1 Byte terminator \00            : \00
-// 4 Bytes uint32 string length     : 43
-// *-1 Bytes string                 : Tile_X3_Y0:PersistentLevel.FGWorldSettings
-// 1 Byte terminator \00            : \00
-// 32 Bytes ??                      :
-// 12 Bytes terminator Object End   : \00\00\80\3f\00\00\80\3f\00\00\80\3f
+// Final JSON output
+file_put_contents(pathinfo($saveFile)['filename'].".json",$save->get_JSON(true));
