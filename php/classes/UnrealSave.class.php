@@ -28,22 +28,23 @@ class UnrealReader {
         fclose($this->stream);
     }
 
-    function get_string(string $byteLength) {
+    function get_string(string $byteLength, $nullTerminator = '00') {
+        $nullByteCount = strlen($nullTerminator)/2;
+     
         if ($byteLength == 0) {
             $data = "";
         } else {
-        $pos = $this->get_currentPosition();
-        $data = fread($this->stream,$byteLength-1);
-        $term = bin2hex(fread($this->stream,1));
-        if ($term != '00') {
-            throw new Exception("Invalid string terminator. expecting \\0 (Str: 00)");
-        }
+            $data = fread($this->stream,$byteLength-$nullByteCount);
+            $term = bin2hex(fread($this->stream,$nullByteCount));
+            if ($nullByteCount != 0 && $term != $nullTerminator) {
+                throw new Exception("Invalid string terminator. expecting (Hex: '$nullTerminator')");
+            }
         }
         return $data;
     }
 
     function get_zlibHeader() {
-        
+      
         $skipped = 0;
         $data = "";
         while (true) {
@@ -146,55 +147,5 @@ class UnrealReader {
             return [];
         }
         return array_combine($matches['keys'],$matches['values']);
-    }
-
-    function get_object($terminator) {
-        // check that there is enough bytes left to read an object
-        $byteLeft = $this->get_totalByteCount() - $this->get_currentPosition();
-        if ($byteLeft == 73130) {
-            echo "";
-            return null;
-        }
-        echo "";
-        $object = new SatisfactoryGameObject;
-        $object->set_object4bytes(int_helper::uInt32($this->get_chunk(4)));
-        $object->set_object4bytes2(int_helper::uInt32($this->get_chunk(4)));
-
-        $object->set_objectPath($this->get_string(int_helper::uInt32($this->get_chunk(4))));
-        if ($object->get_object4bytes2() != 1) {
-            $object->set_object4bytes3(int_helper::uInt32($this->get_chunk(4)));
-            $object->set_object4bytes4(int_helper::uInt32($this->get_chunk(4)));
-            $object->set_object4bytes5(int_helper::uInt32($this->get_chunk(4)));
-        }  
-        $strLength = int_helper::uInt32($this->get_chunk(4));
-        
-        $object->set_objectScript($this->get_string($strLength));
-        $object->set_objectName($this->get_string(int_helper::uInt32($this->get_chunk(4))));
-        $object->set_objectSettings($this->get_string(int_helper::uInt32($this->get_chunk(4))));
-        $str = '';
-        while (!$this->is_terminator($terminator)) {
-            $str .= $this->get_chunk(4);
-        }
-        $object->object_RemBytes($str);
-        $t = bin2hex($this->get_chunk(12));
-        return $object;
-    }
-
-    private function is_terminator($hexTerminator) {
-        $terminatorFirstByte = substr($hexTerminator,0,8);
-        $remBytes = (strlen($hexTerminator)/2)-4;
-        $byte = $this->get_chunk(4);
-        $byte = bin2hex($byte);
-        if ($byte == $terminatorFirstByte) {
-            $lastbytes = $this->get_chunk($remBytes);
-            $lastbytes = bin2hex($lastbytes);
-            fseek($this->stream, -($remBytes+4), SEEK_CUR);
-            if ($byte.$lastbytes == $hexTerminator) {
-                return true;
-            }
-        } else {
-            fseek($this->stream, -4, SEEK_CUR);
-        }
-        return false;
     }
 }

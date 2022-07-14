@@ -1,113 +1,23 @@
 <?php
 
+// Reference: https://satisfactory.fandom.com/wiki/Save_files#Compressed_Save_File_Body_Format
+
 class SatisfactorySave {
-    // Header based on UE docs and visible data in the .sav files
-    private int $saveGameVersion = 0;
-    private int $packageVersion = 0;
-    private int $customFormatVersion = 0;
-    private string $saveGameType = "";
-    private array $sessionProperties = [];
-    private string $sessionName = "";
-    private int $playDurationSeconds = 0;
-    private int $saveDateTime = 0;
-    private bool $sessionVisibility = false; // stored as Byte
-    private int $fEditorObjectVersion = 0; // if saveVersion >= 7
-    private string $modMetaData = ''; // if saveVersion >= 8
-    private bool $isModdedSave = false; // if saveVersion >= 8 / stored as int
-    private array $objectsTree = [];
-
-    function set_version(int $saveGameVersion, int $packageVersion, int $customFormatVersion) {
-        $this->saveGameVersion = $saveGameVersion;
-        $this->packageVersion = $packageVersion;
-        $this->customFormatVersion = $customFormatVersion;
+    public object $saveFileHeader;
+    public object $saveFileBody;
+    
+    function __construct() {
+        $this->saveFileHeader = new SaveFileHeader;
+        $this->saveFileBody = new SaveFileBody;
     }
 
-    function version() {
-        return Array(
-            "saveGameVersion" => $this->saveGameVersion,
-            "packageVersion" => $this->packageVersion,
-            "customFormatVersion" => $this->customFormatVersion
-        );
-    }
-    function versionString() {
-        return "V".$this->saveGameVersion.".".$this->packageVersion.".".$this->customFormatVersion;
-    }
+    function __destruct() {
 
-    function set_saveGameType(string $string) {
-        $this->saveGameType = $string;
     }
-    function set_sessionProperties(array $props) {
-        if(!is_array($props)) {
-            throw new Exception("Expected value is not an array");
-        }
-        if (count($props) == 0) {
-            throw new Exception("Expected values, none received in array");
-        }
-        $this->sessionProperties = $props;
-    }
-    function set_sessionName(string $string) {
-        $this->sessionName = $string;
-    }
-    function set_playDurationSeconds(int $seconds) {
-        $this->playDurationSeconds = $seconds;
-    }
-    function set_saveDateTime(int $timecode) {
-        $this->saveDateTime = $timecode;
-    }
-    function set_sessionVisibility(bool $visibility) {
-        $this->sessionVisibility = $visibility;
-    }
-    function set_fEditorObjectVersion(int $version) {
-        $this->fEditorObjectVersion = $version;
-    }
-    function set_modMetadata(string $object) {
-        $this->modMetaData = $object;
-    }
-    function set_isModdedSave(bool $isModded) {
-        $this->isModdedSave = $isModded;
-    }
-
-    function saveGameType() {
-        return $this->saveGameType;
-    }
-    function sessionProperties() {
-        return $this->sessionProperties;
-    }
-    function sessionProperty(string $key) {
-        if (!isset($this->sessionProperties[$key])) {
-            return false;
-        }
-        return $this->sessionProperties[$key];
-    }
-    function sessionName() {
-        return $this->sessionName;
-    }
-
-    function get_JSON($prettyprint) {
-        $arr = Array(
-            "saveGameVersion" => $this->saveGameVersion,
-            "packageVersion" => $this->packageVersion,
-            "customFormatVersion" => $this->customFormatVersion,
-            "saveGameType" => $this->saveGameType,
-            "sessionProperties" => $this->sessionProperties,
-            "sessionName" => $this->sessionName,
-            "playDurationSeconds" => $this->playDurationSeconds,
-            "saveDateTime" => $this->saveDateTime,
-            "sessionVisibility" => $this->sessionVisibility,
-        );
-        if ($this->saveGameVersion >= 7) {
-            $arr["fEditorObjectVersion"] = $this->fEditorObjectVersion;
-        }
-        if ($this->saveGameVersion >= 8) {
-            $arr["modMetaData"] = $this->modMetaData;
-            $arr["isModdedSave"] = $this->isModdedSave;
-        }
-
-        $arr["objectsTree"] = [];
-
-        foreach ($this->objectsTree as $object) {
-            array_push($arr["objectsTree"],(array)$object);
-        }
+    function get_JSON(bool $prettyprint = true) {
+        $arr = Array();
+        
+        // TODO:
         
         if ($prettyprint) {
             return json_encode($arr, JSON_PRETTY_PRINT);
@@ -115,17 +25,181 @@ class SatisfactorySave {
             return json_encode($arr);
         }
     }
+}
 
-    function add_object(SatisfactoryGameObject $object) {
-        array_push($this->objectsTree,$object);
+class SaveFileHeader {
+    public int $saveHeaderVersion;
+    public int $saveVersion;
+    public int $buildVersion;
+    public string $mapName;
+    public string $mapOptions;
+    public string $sessionName;
+    public int $playedSeconds;
+    public int $saveTimestamp;
+    public int $sessionVisibility;
+    public int $editorObjectVersion;
+    public string $modMetaData;
+    public int $modFlags;
+
+    function set_version(int $headerVersion, int $saveVersion, int $buildVersion) {
+        $this->saveHeaderVersion = $headerVersion;
+        $this->saveVersion = $saveVersion;
+        $this->buildVersion = $buildVersion;
     }
-    function clear_allObjects() {
-        $this->objectsTree = "";
+
+    function get_version(bool $returnString = false) {
+        if (!$returnString) {
+        return Array(
+            "saveHeaderVersion" => $this->saveHeaderVersion,
+            "saveVersion" => $this->saveVersion,
+            "buildVersion" => $this->buildVersion
+        );
+        } else {
+            return "V: ".$this->saveHeaderVersion.".".$this->saveVersion.".".$this->buildVersion;
+        }
     }
-    function get_object(int $i) {
-        return $this->objectsTree[$i];
+
+    function set_mapName(string $string) {
+        $this->mapName = $string;
     }
-    function get_allObjects() {
-        return $this->objectsTree;
+
+    function get_mapName() {
+        return $this->mapName;
     }
+
+    function set_mapOptions(string $string) {
+        $this->mapOptions = $string;
+    }
+
+    function get_mapOptions() {
+        return $this->mapOptions;
+    }
+
+    function set_sessionName(string $string) {
+        $this->sessionName = $string;
+    }
+
+    function get_sessionName() {
+        return $this->sessionName;
+    }
+
+    function set_playDuration(int $seconds) {
+        $this->playDurationSeconds = $seconds;
+    }
+
+    function get_playDuration(string $timeFormat = null) {
+        if (is_null($timeFormat)) {
+            return $this->playDurationSeconds;
+        }
+
+        throw new Exception("Not implemented yet");
+    }
+
+    function set_saveTimestamp(int $ticks) {
+        $this->saveTimestamp = $ticks;
+    }
+
+    function get_saveTimestamp() {
+        return $this->saveTimestamp;
+    }
+
+    function set_sessionVisibility(int $visibility) {
+        $this->sessionVisibility = $visibility;
+    }
+
+    function get_sessionVisibility() {
+        return $this->sessionVisibility;
+    }
+
+    function set_editorObjectVersion(int $version) {// if saveVersion >= 7
+        if ($this->saveVersion >= 7) {
+            $this->fEditorObjectVersion = $version;
+        } else {
+            return false;
+        }
+    }
+
+    function get_editorObjectVersion() {
+        return $this->fEditorObjectVersion;
+    }
+
+    function set_modMetaData() {
+        // TODO
+    }
+
+    function get_modMetaData() {
+        if ($this->saveVersion >= 8) {
+            // TODO
+        } else {
+            return false;
+        }
+    }
+
+    function set_modFlags() {
+        // TODO
+    }
+
+    function get_modFlags() {
+        if ($this->saveVersion >= 8) {
+            // TODO
+        } else {
+            return false;
+        }
+    }
+}
+
+class SaveFileBody {
+    public int $size;
+    public int $objectHeaderCount;
+    public int $objectHeaders;
+    public int $objectCount;
+    public int $objects;
+    public int $collectedObjectsCount;
+    public int $collectedObjects;
+}
+
+class ObjectHeader {
+    public int $headerType;
+    public object $header;
+}
+
+class ActorHeader {
+    public string $typePath;
+    public string $rootObject;
+    public string $instanceName;
+    public int $needsTransform;
+    public float $rotationX;
+    public float $rotationY;
+    public float $rotationZ;
+    public float $rotationW;
+    public float $positionX;
+    public float $positionY;
+    public float $positionZ;
+    public float $scaleX;
+    public float $scaleY;
+    public float $scaleZ;
+    public int $placedInLevel;
+}
+
+class ActorObject {
+    public int $size;
+    public string $parentObjectRoot;
+    public string $parentObjectName;
+    public int $componentCount;
+    public object $components;
+    public object $properties;
+    public string $trailingBytes;
+}
+
+class ComponentHeader {
+    public string $typePath;
+    public string $rootObject;
+    public string $instanceName;
+    public string $parentActorName;
+}
+
+class ComponentObject {
+    public int $size;
+    public object $properties;
+    public string $trailingBytes;
 }
