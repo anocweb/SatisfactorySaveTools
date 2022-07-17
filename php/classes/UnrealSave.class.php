@@ -28,13 +28,13 @@ class UnrealReader {
         fclose($this->stream);
     }
 
-    function get_string(string $byteLength, $nullTerminator = '00') {
-        $nullByteCount = strlen($nullTerminator)/2;
-     
-        if ($byteLength == 0) {
-            $data = "";
+    function get_string($nullTerminator = '00', int $bytes = 4) {
+        $strLength = int_helper::Int32($this->get_chunk($bytes));
+        if ($strLength == 0) {
+            $data = '';
         } else {
-            $data = fread($this->stream,$byteLength-$nullByteCount);
+            $nullByteCount = strlen($nullTerminator)/2;
+            $data = fread($this->stream,$strLength-$nullByteCount);
             $term = bin2hex(fread($this->stream,$nullByteCount));
             if ($nullByteCount != 0 && $term != $nullTerminator) {
                 throw new Exception("Invalid string terminator. expecting (Hex: '$nullTerminator')");
@@ -125,6 +125,9 @@ class UnrealReader {
     }
 
     function get_chunk(int $numBytes) {
+        if ($numBytes == 0) {
+            throw new Exception("Cannot retreive empty or null chunk!");
+        }
         $data = fread($this->stream,$numBytes);
         
         return $data;
@@ -135,6 +138,11 @@ class UnrealReader {
         
         return $data;
     }
+    
+    function set_currentPosition($pos) {
+        fseek($this->stream,$pos);
+    }
+
     function get_totalByteCount() {
         $data = fstat($this->stream);
         return $data['size'];

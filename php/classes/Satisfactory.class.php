@@ -7,16 +7,18 @@ class SatisfactorySave {
     public object $saveFileBody;
     
     function __construct() {
-        $this->saveFileHeader = new SaveFileHeader;
-        $this->saveFileBody = new SaveFileBody;
+        $this->saveFileHeader = new SaveFileHeader();
+        $this->saveFileBody = new SaveFileBody();
     }
 
     function __destruct() {
 
     }
+
     function get_JSON(bool $prettyprint = true) {
         $arr = Array();
-        
+        $arr["saveFileHeader"] = $this->saveFileHeader->get_Array();
+        $arr['saveFileBody'] =  $this->saveFileBody->get_Array();
         // TODO:
         
         if ($prettyprint) {
@@ -27,7 +29,7 @@ class SatisfactorySave {
     }
 }
 
-class SaveFileHeader {
+class SaveFileHeader extends SatisfactorySave {
     public int $saveHeaderVersion;
     public int $saveVersion;
     public int $buildVersion;
@@ -40,6 +42,14 @@ class SaveFileHeader {
     public int $editorObjectVersion;
     public string $modMetaData;
     public int $modFlags;
+
+    function __construct() {
+    
+    }
+
+    function __destruct() {
+
+    }
 
     function set_version(int $headerVersion, int $saveVersion, int $buildVersion) {
         $this->saveHeaderVersion = $headerVersion;
@@ -84,12 +94,12 @@ class SaveFileHeader {
     }
 
     function set_playDuration(int $seconds) {
-        $this->playDurationSeconds = $seconds;
+        $this->playedSeconds = $seconds;
     }
 
     function get_playDuration(string $timeFormat = null) {
         if (is_null($timeFormat)) {
-            return $this->playDurationSeconds;
+            return $this->playedSeconds;
         }
 
         throw new Exception("Not implemented yet");
@@ -113,42 +123,66 @@ class SaveFileHeader {
 
     function set_editorObjectVersion(int $version) {// if saveVersion >= 7
         if ($this->saveVersion >= 7) {
-            $this->fEditorObjectVersion = $version;
+            $this->editorObjectVersion = $version;
         } else {
             return false;
         }
     }
 
     function get_editorObjectVersion() {
-        return $this->fEditorObjectVersion;
+        return $this->editorObjectVersion;
     }
 
-    function set_modMetaData() {
-        // TODO
+    function set_modMetaData(string $metaString) {
+        $this->modMetaData = $metaString;
     }
 
     function get_modMetaData() {
         if ($this->saveVersion >= 8) {
-            // TODO
+            return $this->modMetaData;
         } else {
             return false;
         }
     }
 
-    function set_modFlags() {
-        // TODO
+    function set_modFlags(int $flags) {
+        $this->modFlags = $flags;
     }
 
     function get_modFlags() {
         if ($this->saveVersion >= 8) {
-            // TODO
+            return $this->modFlags;
         } else {
             return false;
         }
     }
+
+    function get_Array() {
+        $arr = Array(
+            "saveHeaderVersion" => $this->saveHeaderVersion,
+            "saveVersion" => $this->saveVersion,
+            "buildVersion" => $this->buildVersion,
+            "mapName" => $this->mapName,
+            "mapOptions" => $this->mapOptions,
+            "sessionName" => $this->sessionName,
+            "playedSeconds" => $this->playedSeconds,
+            "saveTimestamp" => $this->saveTimestamp,
+            "sessionVisibility" => $this->sessionVisibility
+        );
+        if ($this->saveHeaderVersion >= 7) {
+            $arr["editorObjectVersion"] = $this->editorObjectVersion;
+        }
+        if ($this->saveHeaderVersion >= 8) {
+            $arr["modMetaData"] = $this->modMetaData;
+            $arr["modFlags"] = $this->modFlags;
+        }
+        return $arr;
+    }
 }
 
 class SaveFileBody {
+    public string $compressedSignature;
+    public array $compressedChunkMeta;
     public int $size;
     public int $objectHeaderCount;
     public int $objectHeaders;
@@ -156,6 +190,38 @@ class SaveFileBody {
     public int $objects;
     public int $collectedObjectsCount;
     public int $collectedObjects;
+
+    function __construct() {
+    
+    }
+
+    function __destruct() {
+
+    }
+
+    function set_compressedSignature(string $sig) {
+        $this->compressedSignature = $sig;
+    }
+
+    function get_compressedSignature() {
+        return $this->compressedSignature;
+    }
+
+    function set_compressedChunkMeta(array $arr) {
+        $this->compressedChunkMeta = $arr;
+    }
+
+    function get_compressedChunkMeta() {
+        return $this->compressedChunkMeta;
+    }
+    
+    function get_Array() {
+        $arr = Array(
+            "compressedSignature" => $this->compressedSignature,
+            "compressedChunkMeta" => $this->compressedChunkMeta
+        );
+        return $arr;
+    }
 }
 
 class ObjectHeader {
