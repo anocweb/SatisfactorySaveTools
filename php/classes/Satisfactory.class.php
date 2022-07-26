@@ -185,14 +185,16 @@ class SaveFileBody {
     public array $compressedChunkMeta;
     public int $size;
     public int $objectHeaderCount;
-    public int $objectHeaders;
+    public array $objectHeaders;
     public int $objectCount;
-    public int $objects;
+    public array $objects;
     public int $collectedObjectsCount;
-    public int $collectedObjects;
+    public array $collectedObjects;
 
     function __construct() {
-    
+        $this->objectHeaders = Array();
+        $this->objects = Array();
+        $this->collectedObjects = Array();
     }
 
     function __destruct() {
@@ -268,4 +270,107 @@ class ComponentObject {
     public int $size;
     public object $properties;
     public string $trailingBytes;
+}
+
+class PropertyList {
+    public int $size;
+    public int $index;
+    public string $type;
+    public int $padding;
+    public int $length;
+    public array $elements;
+}
+
+class BoolProperty {
+    public int $startPadding;
+    public int $index;
+    public int $value;
+    public int $endPadding;
+}
+
+class ByteProperty {
+    public int $size;
+    public int $index;
+    public string $type;
+    public int $padding;
+    public $value;
+}
+
+class EnumProperty {
+    public int $size;
+    public int $index;
+    public string $type;
+    public int $padding;
+    public string $value;
+}
+
+class FloatProperty {
+    public int $size;
+    public int $index;
+    public int $padding;
+    public float $value;
+}
+
+class IntProperty {
+    public int $size;
+    public int $index;
+    public int $padding;
+    public int $value;
+}
+
+class Int64Property {
+    public int $size;
+    public int $index;
+    public int $padding;
+    public int $value;
+}
+
+class MapProperty {
+    public int $size;
+    public int $index;
+    public string $keyType;
+    public string $valueType;
+    public int $padding;
+    public int $modeType;
+    public int $elementCount;
+    public array $mapElements;
+}
+
+class NameProperty {
+    public int $size;
+    public int $index;
+    public int $padding;
+    public string $value;
+}
+
+class ObjectProperty {
+    public int $size;
+    public int $index;
+    public int $padding;
+    public string $levelName;
+    public string $pathName;
+}
+class StrProperty {
+    public int $size;
+    public int $index;
+    public string $type;
+    public int $padding;
+    public int $padding2; // ????
+    public int $padding3; // ????
+    public array $typedData;
+}
+class StructProperty {
+    public int $size;
+    public int $index;
+    public int $padding;
+    public float $value;
+}
+class TextProperty {
+    public int $size;
+    public int $index;
+    public int $padding;
+    public int $flags;
+    public int $historyType;
+    public int $isTextCultureInvariant;
+    public string $value;
 }
