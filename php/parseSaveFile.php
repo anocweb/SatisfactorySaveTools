@@ -90,14 +90,10 @@ for ($i = 0; $i <= count($headers); $i++) {
 }
 unset($saveReader);
 
-// Store the inflated data in a stream reader
-$inflatedReader = New UnrealReader("php://temp",$inflatedData);
-
 // Temporarily output to dat files for testing
 file_put_contents(pathinfo($saveFile)['filename']."_inflated.dat",$inflatedData);
 
-// Remove the inflated data to save memory
-unset($inflatedData);
+require('parseInflatedData.php');
 
 // Final JSON output
 file_put_contents(pathinfo($saveFile)['filename'].".json",$_save->get_JSON(true));
