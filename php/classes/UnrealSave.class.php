@@ -7,8 +7,8 @@ class UnrealReader {
             if (!is_file($filename)) {
                 throw new Exception("File does not exist");
             }
-            if (pathinfo($filename)['extension'] != 'sav') {
-                throw new Exception("Invalid extension type. Must be .sav");
+            if (!in_array(pathinfo($filename)['extension'],['sav','dat'])) {
+                throw new Exception("Invalid extension type. Must be .sav or .dat");
             }
             if (!$this->stream = fopen($filename, 'rb')) {
                 throw new Exception("Unable to open specified save file");
