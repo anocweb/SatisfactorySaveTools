@@ -69,4 +69,38 @@ class int_helper
 
             return is_array($i) ? $i[1] : $i;
         }
+
+        public static function Float32($i, $endianness=false) {
+            $f = is_int($i) ? "pack" : "unpack";
+            if ($endianness === true) {  // big-endian
+                $i = $f("G", $i);
+            }
+            else if ($endianness === false) {  // little-endian
+                $i = $f("g", $i);
+            }
+            else if ($endianness === null) {  // machine byte order
+                $i = $f("f", $i);
+            }
+            return is_array($i) ? $i[1] : $i;
+        }
+
+        public static function Float64($i, $endianness=false) {
+            $f = is_int($i) ? "pack" : "unpack";
+            if ($endianness === true) {  // big-endian
+                $i = $f("E", $i);
+            }
+            else if ($endianness === false) {  // little-endian
+                $i = $f("e", $i);
+            }
+            else if ($endianness === null) {  // machine byte order
+                $i = $f("d", $i);
+            }
+            return is_array($i) ? $i[1] : $i;
+        }
+
+        public static function Double($i, $endianness=false) {
+            return self::Float64($i,$endianness);
+        }
+
+
     }
