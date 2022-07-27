@@ -12,30 +12,30 @@ if (!isset($saveFile)) {
     $inflatedReader = New UnrealReader("php://temp",$inflatedData);
 }
 
-$_save->saveFileBody->size = int_helper::Int32($inflatedReader->get_chunk(4));
-$_save->saveFileBody->objectHeaderCount = int_helper::Int32($inflatedReader->get_chunk(4));
+$_save->saveFileBody->size = $inflatedReader->get_num();
+$_save->saveFileBody->objectHeaderCount = $inflatedReader->get_num();
 
 for ($i = 0;$i < $_save->saveFileBody->objectHeaderCount;$i++) {
     $objectHeader = new ObjectHeader();
-    $objectHeader->headerType = int_helper::Int32($inflatedReader->get_chunk(4));
+    $objectHeader->headerType = $inflatedReader->get_num();
     if ($objectHeader->headerType == 1) {
         // Actor Object
         $actorHeader = new ActorHeader();
         $actorHeader->typePath = $inflatedReader->get_string();
         $actorHeader->rootObject = $inflatedReader->get_string();
         $actorHeader->instanceName = $inflatedReader->get_string();
-        $actorHeader->needsTransform = int_helper::Int32($inflatedReader->get_chunk(4));
-        $actorHeader->rotationX = int_helper::Float32($inflatedReader->get_chunk(4));
-        $actorHeader->rotationY = int_helper::Float32($inflatedReader->get_chunk(4));
-        $actorHeader->rotationZ = int_helper::Float32($inflatedReader->get_chunk(4));
-        $actorHeader->rotationW = int_helper::Float32($inflatedReader->get_chunk(4));
-        $actorHeader->positionX = int_helper::Float32($inflatedReader->get_chunk(4));
-        $actorHeader->positionY = int_helper::Float32($inflatedReader->get_chunk(4));
-        $actorHeader->positionZ = int_helper::Float32($inflatedReader->get_chunk(4));
-        $actorHeader->scaleX = int_helper::Float32($inflatedReader->get_chunk(4));
-        $actorHeader->scaleY = int_helper::Float32($inflatedReader->get_chunk(4));
-        $actorHeader->scaleZ = int_helper::Float32($inflatedReader->get_chunk(4));
-        $actorHeader->placedInLevel = int_helper::Int32($inflatedReader->get_chunk(4));
+        $actorHeader->needsTransform = $inflatedReader->get_num();
+        $actorHeader->rotationX = $inflatedReader->get_num("Float32");
+        $actorHeader->rotationY = $inflatedReader->get_num("Float32");
+        $actorHeader->rotationZ = $inflatedReader->get_num("Float32");
+        $actorHeader->rotationW = $inflatedReader->get_num("Float32");
+        $actorHeader->positionX = $inflatedReader->get_num("Float32");
+        $actorHeader->positionY = $inflatedReader->get_num("Float32");
+        $actorHeader->positionZ = $inflatedReader->get_num("Float32");
+        $actorHeader->scaleX = $inflatedReader->get_num("Float32");
+        $actorHeader->scaleY = $inflatedReader->get_num("Float32");
+        $actorHeader->scaleZ = $inflatedReader->get_num("Float32");
+        $actorHeader->placedInLevel = $inflatedReader->get_num();
 
         $objectHeader->header = $actorHeader;
     } else if ($objectHeader->headerType == 0) {
@@ -52,7 +52,7 @@ for ($i = 0;$i < $_save->saveFileBody->objectHeaderCount;$i++) {
     echo "";
 }
 
-$_save->saveFileBody->objectCount = int_helper::Int32($inflatedReader->get_chunk(4));
+$_save->saveFileBody->objectCount = $inflatedReader->get_num();
 
 for ($i = 0;$i < $_save->saveFileBody->objectCount;$i++) {
     $sPos = $inflatedReader->get_currentPosition();
@@ -61,22 +61,57 @@ for ($i = 0;$i < $_save->saveFileBody->objectCount;$i++) {
         // Actor Object
         
         $object = new ActorObject();
-        $object->size = int_helper::Int32($inflatedReader->get_chunk(4));
+        $object->size = $inflatedReader->get_num();
         $object->parentObjectRoot = $inflatedReader->get_string();
         $object->parentObjectName = $inflatedReader->get_string();
-        $object->componentCount = int_helper::Int32($inflatedReader->get_chunk(4));
+        $object->componentCount = $inflatedReader->get_num();
         if ($object->componentCount != 0) {
             $object->components;
         }
-        //$object->properties;
+        $object->properties = Array();
+        
+        $list = new PropertyList();
+        $list->name = $inflatedReader->get_string();
+        $list->type = $inflatedReader->get_string();
+        switch ($list->type) {
+            case "StructProperty":
+                $property = new StructProperty();
+                $property->size = $inflatedReader->get_num();
+                $property->index = $inflatedReader->get_num();
+                $property->type = $inflatedReader->get_string();
+                $property->padding = $inflatedReader->get_num();
+                $property->padding2 = $inflatedReader->get_num();
+                $property->padding3 = $inflatedReader->get_num();
+                
+                switch ($property->type) {
+                    default:
+                        $data = $inflatedReader->get_chunk($property->size);
+                        $none = $inflatedReader->get_chunk(4);
+                        if ($none !== "None") {
+                            throw new Error("Missing none!");
+                        }
+                        $property->properties = (string)$data;
+                        $list->typedData = $property; 
+                }
+                break;
+            
+            default:
+                break;
+        }
+        array_push($object->properties, $list);
+        
+        //TODO: Loop through properties while bytes are remaining.
+        //TODO: Refactor code to be better thought out. This is turning into spaghetti and is not easily readable.
+
         $remainingBytes = $object->size - ($inflatedReader->get_currentPosition() - $sPos);
         $object->trailingBytes = $inflatedReader->get_chunk($remainingBytes);
     } else if ($_save->saveFileBody->objectHeaders[$i]->headerType == 0) {
         // Component Object
         $componentHeader = new ComponentObject();
-        $object->size = int_helper::Int32($inflatedReader->get_chunk(4));
+        $object->size = $inflatedReader->get_num();
 
         //$object->properties;
+        
         $remainingBytes = $object->size - ($inflatedReader->get_currentPosition() - $sPos);
         $object->trailingBytes = $inflatedReader->get_chunk($remainingBytes);
     }
