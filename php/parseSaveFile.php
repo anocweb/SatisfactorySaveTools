@@ -18,23 +18,23 @@ $saveReader = New UnrealReader($saveFile);
  */
 
 // Get game save version
-$saveHeaderVersion = int_helper::Int32($saveReader->get_chunk(4));
-$saveVersion = int_helper::Int32($saveReader->get_chunk(4));
-$buildVersion = int_helper::Int32($saveReader->get_chunk(4));
+$saveHeaderVersion = $saveReader->get_num();
+$saveVersion = $saveReader->get_num();
+$buildVersion = $saveReader->get_num();
 
 $_save->saveFileHeader->set_version($saveHeaderVersion,$saveVersion,$buildVersion);
 $_save->saveFileHeader->set_mapName($saveReader->get_string());
 $_save->saveFileHeader->set_mapOptions($saveReader->get_string());
 $_save->saveFileHeader->set_sessionName($saveReader->get_string());
-$_save->saveFileHeader->set_playDuration(int_helper::Int32($saveReader->get_chunk(4)));
-$_save->saveFileHeader->set_saveTimestamp(int_helper::Int64($saveReader->get_chunk(8)));
-$_save->saveFileHeader->set_sessionVisibility(int_helper::Int8($saveReader->get_chunk(1)));
+$_save->saveFileHeader->set_playDuration($saveReader->get_num());
+$_save->saveFileHeader->set_saveTimestamp($saveReader->get_num("Int64"));
+$_save->saveFileHeader->set_sessionVisibility($saveReader->get_num("Int8"));
 if ($saveHeaderVersion >= 7) {
-    $_save->saveFileHeader->set_editorObjectVersion(int_helper::Int32($saveReader->get_chunk(4)));
+    $_save->saveFileHeader->set_editorObjectVersion($saveReader->get_num());
 }
 if ($saveHeaderVersion >= 8) {
     $_save->saveFileHeader->set_modMetaData($saveReader->get_string());
-    $_save->saveFileHeader->set_modFlags(int_helper::Int32($saveReader->get_chunk(4)));
+    $_save->saveFileHeader->set_modFlags($saveReader->get_num());
 }
 
 /*
@@ -51,16 +51,16 @@ $chunksMeta = Array();
 while (count($chunksMeta) <= 2) {
     if (count($chunksMeta) < 2) {
         $chunkMeta = Array(
-            "chunkPadding" => int_helper::Int32($saveReader->get_chunk(4)),
-            "chunkMaxSize" => int_helper::Int32($saveReader->get_chunk(4)),
-            "chunkCompressedPadding" => int_helper::Int32($saveReader->get_chunk(4)),
-            "chunkCompressedSize" => int_helper::Int32($saveReader->get_chunk(4))
+            "chunkPadding" => $saveReader->get_num(),
+            "chunkMaxSize" => $saveReader->get_num(),
+            "chunkCompressedPadding" => $saveReader->get_num(),
+            "chunkCompressedSize" => $saveReader->get_num()
         );
     } else {
         $chunkMeta = Array(
-            "chunkPadding" => int_helper::Int32($saveReader->get_chunk(4)),
-            "chunkMaxSize" => int_helper::Int32($saveReader->get_chunk(4)),
-            "chunkCompressedPadding" => int_helper::Int32($saveReader->get_chunk(4)),
+            "chunkPadding" => $saveReader->get_num(),
+            "chunkMaxSize" => $saveReader->get_num(),
+            "chunkCompressedPadding" => $saveReader->get_num(),
             "chunkCompressedSize" => null
         );
     }
