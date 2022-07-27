@@ -43,6 +43,37 @@ class UnrealReader {
         return $data;
     }
 
+    function get_num($numType = "Int32") {
+        $val = 0;
+        switch ($numType) {
+            case "Int8":
+                $val = int_helper::Int8($this->get_chunk(1));
+                break;
+
+            case "Int32":
+                $val = int_helper::Int32($this->get_chunk(4));
+                break;
+ 
+            case "Int64":
+                $val = int_helper::Int64($this->get_chunk(8));
+                break;
+
+            case "Float32":
+                $val = int_helper::Float32($this->get_chunk(4));
+                break;
+
+            case "Float64":
+                $val = int_helper::Float64($this->get_chunk(8));
+                break;
+
+            default:
+                throw new Error("Unsupported Type!");
+                // TODO: Add support for other data types
+                break;
+        }
+        return $val;
+    }
+
     function get_zlibHeader() {
       
         $skipped = 0;
