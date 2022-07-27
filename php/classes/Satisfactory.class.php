@@ -255,7 +255,7 @@ class ActorObject {
     public string $parentObjectName;
     public int $componentCount;
     public object $components;
-    public object $properties;
+    public array $properties;
     public string $trailingBytes;
 }
 
@@ -268,17 +268,14 @@ class ComponentHeader {
 
 class ComponentObject {
     public int $size;
-    public object $properties;
+    public array $properties;
     public string $trailingBytes;
 }
 
 class PropertyList {
-    public int $size;
-    public int $index;
+    public string $name;
     public string $type;
-    public int $padding;
-    public int $length;
-    public array $elements;
+    public array $properties;
 }
 
 class BoolProperty {
@@ -353,17 +350,17 @@ class ObjectProperty {
 class StrProperty {
     public int $size;
     public int $index;
-    public string $type;
     public int $padding;
-    public int $padding2; // ????
-    public int $padding3; // ????
-    public array $typedData;
+    public float $value;
 }
 class StructProperty {
     public int $size;
     public int $index;
+    public string $type;
     public int $padding;
-    public float $value;
+    public int $padding2; // ????
+    public int $padding3; // ????
+    public object $typedData;
 }
 class TextProperty {
     public int $size;
@@ -373,4 +370,55 @@ class TextProperty {
     public int $historyType;
     public int $isTextCultureInvariant;
     public string $value;
+}
+
+// TypedData classes for ArrayProperty or StructProperty
+
+class Box {
+    public float $minX;
+    public float $minY;
+    public float $minZ;
+    public float $maxX;
+    public float $maxY;
+    public float $maxZ;
+    public int $isValid;
+}
+
+class FluidBox {
+    public float $value;
+}
+
+class InventoryItem {
+    public int $padding;
+    public string $itemType;
+    public string $levelName;
+    public string $pathName;
+    public array $extraProperty;
+}
+
+class LinearColor {
+    public float $r;
+    public float $g;
+    public float $b;
+    public float $a;
+}
+
+class Quat {
+    public float $x;
+    public float $y;
+    public float $z;
+    public float $w;
+}
+
+class RailroadTrackPosition {
+    public string $levelName;
+    public string $pathName;
+    public float $offset;
+    public float $forward;
+}
+
+class Vector {
+    public float $x;
+    public float $y;
+    public float $z;
 }
